@@ -1,28 +1,26 @@
 from typing import Callable
-from functools import wraps
 
 
 def cache(func: Callable) -> Callable:
-    _cache_dict = {}
+    cache_dict = {}
 
-    @wraps(func)
-    def wrapper(*args: tuple) -> int:
-        if func.__name__ in _cache_dict:
-            if args in _cache_dict[func.__name__]:
-                print("Getting from cache")
-                return _cache_dict[func.__name__][args]
+    def wrapper(*args: tuple, **kwargs: dict) -> int:
+        if args in cache_dict:
+            print("Getting from cache")
+            return cache_dict[args]
 
+        # Checking if function parameters immutable,
+        # because they are cannot be keys
+
+        if kwargs:
+            return func(*args, **kwargs)
         for arg in args:
             if not isinstance(arg, (int, float, bool, str, tuple)):
-                return func(*args)
+                return func(*args, **kwargs)
 
         print("Calculating new result")
-        result = func(*args)
-
-        if func.__name__ not in _cache_dict:
-            _cache_dict[func.__name__] = {}
-
-        _cache_dict[func.__name__][args] = result
-
+        result = func(*args, **kwargs)
+        cache_dict[args] = result
         return result
+
     return wrapper
